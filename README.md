@@ -2,6 +2,9 @@
 
 This repository contains a Linux enumeration script to assist in identifying misconfigurations, privilege escalation paths, and security vulnerabilities on Linux systems. The tool scans various aspects of the system and categorizes findings based on severity, helping security professionals quickly assess potential issues.
 
+## Usage
+```bash
+
      .--.
     |o_o |
     |:_/ |     Linux Enumeration Script
@@ -12,10 +15,6 @@ This repository contains a Linux enumeration script to assist in identifying mis
  ■ Must Check   ■CVE
  ■ Safe         ■ Info
 
-
-## Usage
-
-```bash
 $ python3 lin.py [-h] [-u] [-his] [-n] [-s] [-p] [-c] [--all]
 
 options:
@@ -28,8 +27,8 @@ options:
   -c, --container   Check container information
   --all             Check all information
 
-# References
-
+```
+## References
 - [Steflan Security Linux Privilege Escalation Guide](https://steflan-security.com/category/guides/privilegeescalation/linux/)
 - [HackTricks Linux Hardening](https://book.hacktricks.xyz/linux-hardening/privilege-escalation)
 - [linPEAS](https://github.com/peass-ng/PEASS-ng)
