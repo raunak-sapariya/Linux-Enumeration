@@ -737,182 +737,10 @@ def container_info():
         else:
             print_mg(f"\033[0;94m{value['msg']}\033[0m: No result")
 
-def corn_job():
-    print_mg("CRONJOBS INFORMATION", header=True)
-    
 
 
-def filesystem_info():
-    print_mg("FILESYSTEM INFORMATION", header=True)
-    filesystem_info = {
-        "Filesystem Information": {
-            "cmd": "df -h 2>/dev/null",
-            "msg": "Filesystem Information",
-            "results": []
-        },
-        "Mount Information": {
-            "cmd": "mount 2>/dev/null",
-            "msg": "Mount Information",
-            "results": []
-        },
-        "Filesystem Permissions": {
-            "cmd": "mount | xargs -n1 -t -I {} sh -c 'ls -la {}'",
-            "msg": "Filesystem Permissions",
-            "results": []
-        },
-        "SUID/SGID Files": {
-            "cmd": "find / -type f -perm -4000 -o -perm -2000 2>/dev/null",
-            "msg": "SUID/SGID Files",
-            "results": []
-        },
-        "World Writable Directories": {
-            "cmd": "find / -type d -perm -0002 2>/dev/null",
-            "msg": "World Writable Directories",
-            "results": []
-        },
-        "World Writable Files": {
-            "cmd": "find / -type f -perm -0002 2>/dev/null",
-            "msg": "World Writable Files",
-            "results": []
-        },
-        "Hidden Files": {
-            "cmd": "find / -name '.*' -ls 2>/dev/null",
-            "msg": "Hidden Files",
-            "results": []
-        },
-        "Readable Files": {
-            "cmd": "find / -type f -readable -exec ls -la {} \; 2>/dev/null",
-            "msg": "Readable Files",
-            "results": []
-        },
-        "Writable Files": {
-            "cmd": "find / -type f -writable -exec ls -la {} \; 2>/dev/null",
-            "msg": "Writable Files",
-            "results": []
-        },
-        "Executable Files": {
-            "cmd": "find / -type f -executable -exec ls -la {} \; 2>/dev/null",
-            "msg": "Executable Files",
-            "results": []
-        },
-        "Sticky Bit Files": {
-            "cmd": "find / -perm -1000 -type d 2>/dev/null",
-            "msg": "Sticky Bit Files",
-            "results": []
-        },
-        "Sticky Bit Executables": {
-            "cmd": "find / -perm -1000 -type f 2>/dev/null",
-            "msg": "Sticky Bit Executables",
-            "results": []
-        },
-        "Filesystem Quotas": {
-            "cmd": "repquota -a 2>/dev/null",
-            "msg": "Filesystem Quotas",
-            "results": []
-        },
-        "Filesystem FSTAB": {
-            "cmd": "cat /etc/fstab 2>/dev/null",
-            "msg": "Filesystem FSTAB",
-            "results": []
-        },
-        "Filesystem Inodes": {
-            "cmd": "df -i 2>/dev/null",
-            "msg": "Filesystem Inodes",
-            "results": []
-        },
-        "Filesystem Disk Usage": {
-            "cmd": "du -ah / 2>/dev/null | sort -rh | head -n 20",
-            "msg": "Filesystem Disk Usage",
-            "results": []
-        },
-        "Filesystem S.M.A.R.T.": {
-            "cmd": "smartctl -a /dev/sda 2>/dev/null",
-            "msg": "Filesystem S.M.A.R.T.",
-            "results": []
-        },
-        "Filesystem S.M.A.R.T. Test": {
-            "cmd": "smartctl -t short /dev/sda 2>/dev/null",
-            "msg": "Filesystem S.M.A.R.T. Test",
-            "results": []
-        },
-        "Filesystem S.M.A.R.T. Results": {
-            "cmd": "smartctl -l selftest /dev/sda 2>/dev/null",
-            "msg": "Filesystem S.M.A.R.T. Results",
-            "results": []
-        },
-        "Filesystem Badblocks": {
-            "cmd": "badblocks -v /dev/sda 2>/dev/null",
-            "msg": "Filesystem Badblocks",
-            "results": []
-        },
-
-    }   
-    for key, value in filesystem_info.items():
-        result = run_command(value["cmd"])
-        if result:
-            print_mg(f"\033[0;94m{value['msg']}\033[0m:\n{result}\n")
-            value["results"].append(result)
-
-def cronjobs_info():
-    print_mg("CRONJOBS INFORMATION", header=True)
-    cronjobs_info = {
-        "Cron Jobs": {
-            "cmd": "crontab -l 2>/dev/null",
-            "msg": "Cron Jobs",
-            "results": []
-        },
-        "Cron Jobs Permissions": {
-            "cmd": "ls -la /etc/cron* 2>/dev/null",
-            "msg": "Cron Jobs Permissions",
-            "results": []
-        },
-        "Cron Jobs Directories": {
-            "cmd": "ls -la /var/spool/cron 2>/dev/null",
-            "msg": "Cron Jobs Directories",
-            "results": []
-        },
-        "Cron Jobs Systemd": {
-            "cmd": "systemctl list-timers 2>/dev/null",
-            "msg": "Cron Jobs Systemd",
-            "results": []
-        },
-        "Cron Jobs Anacron": {
-            "cmd": "cat /etc/anacrontab 2>/dev/null",
-            "msg": "Cron Jobs Anacron",
-            "results": []
-        },
-        "Cron Jobs Periodic": {
-            "cmd": "ls -la /etc/cron* /etc/cron*/* 2>/dev/null",
-            "msg": "Cron Jobs Periodic",
-            "results": []
-        },
-    }
-    for key, value in cronjobs_info.items():
-        result = run_command(value["cmd"])
-        if result:
-            print_mg(f"\033[0;94m{value['msg']}\033[0m:\n{result}\n")
-            value["results"].append(result)
-
-    
 
 
-# def cornjobs_info():
-#     pass
-# def file_and_perms():
-#     pass
-# def cloud_info():
-#     pass
-# def software_info():
-#     pass
-
-# Call the function
-#banner()
-# # user_info()
-# # history_info()
-# # network_info()
-# # system_info()
-# # protection_info()
-# # container_info()
 
 sploits = {
         "2.2.x-2.4.x ptrace kmod local exploit": {"minver": "2.2", "maxver": "2.4.99", "exploitdb": "3", "lang": "c", "keywords": {"loc": ["kernel"], "val": "kernel"}},
@@ -988,8 +816,8 @@ def main():
     parser.add_argument("-s","--system", help="Check system information", action="store_true")
     parser.add_argument("-p","--protection", help="Check protection information", action="store_true")
     parser.add_argument("-c","--container", help="Check container information", action="store_true")
-    parser.add_argument("-f","--filesystem", help="Check filesystem information", action="store_true")
-    parser.add_argument("-cj","--cronjobs", help="Check cronjobs information", action="store_true")
+    # parser.add_argument("-f","--filesystem", help="Check filesystem information", action="store_true")
+    # parser.add_argument("-cj","--cronjobs", help="Check cronjobs information", action="store_true")
     parser.add_argument("--all", help="Check all information", action="store_true")
     args = parser.parse_args()
 
@@ -1015,10 +843,10 @@ def main():
             protection_info()
         if args.container:
             container_info()
-        if args.filesystem:
-            filesystem_info()
-        if args.cronjobs:
-            cronjobs_info()
+        # if args.filesystem:
+        #     filesystem_info()
+        # if args.cronjobs:
+        #     cronjobs_info()
 
 if __name__ == "__main__":
     main()
