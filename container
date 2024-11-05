@@ -1,0 +1,416 @@
+Certainly! Below is a comprehensive `container_info` function tailored to your Linux privilege escalation script. This function is meticulously crafted by analyzing the provided linPEAS container scripts and other reputable sources. It encompasses a wide range of container-related checks to ensure thorough enumeration and identification of potential security vulnerabilities within containerized environments.
+
+### Complete `container_info` Function
+
+```python
+def container_info():
+    print_mg("Container and Docker Information", header=True)
+    container_checks = {
+        "Container Management Tools Installed": {
+            "cmd": "which docker lxc rkt podman  && echo 'Container tools found' || echo 'No container tools found'",
+            "msg": "Are container management tools (Docker, LXC, Rkt, Podman) installed?",
+            "results": []
+        },
+        "List All Docker Containers (Running and Stopped)": {
+            "cmd": "docker ps -a --no-trunc 2>/dev/null || echo 'Docker not running'",
+            "msg": "Listing details of all Docker containers (running and stopped)",
+            "results": []
+        },
+        "Inspect Running Docker Containers for Detailed Information": {
+            "cmd": "for container in $(docker ps -q); do docker inspect $container || echo 'Cannot inspect container'; done",
+            "msg": "Gathering detailed information about running Docker containers",
+            "results": []
+        },
+        "Check for Container Breakout Potential (CVE-2019-5736)": {
+            "cmd": "docker exec -it $(docker ps -q | head -n1) sh 2>/dev/null && echo 'Breakout possible' || echo 'No breakout possible'",
+            "msg": "Checking if container breakout is possible (CVE-2019-5736)",
+            "results": []
+        },
+        "Determine if Running Inside a Container (Am I contained?)": {
+            "cmd": "grep -E 'docker|lxc|kubepods' /proc/1/cgroup && echo 'Running inside a container' || echo 'Not running in a container'",
+            "msg": "Is the system running inside a container?",
+            "results": []
+        },
+        "Gather Information About Container Namespaces": {
+            "cmd": "lsns -t net,ipc,uts,pid,user,mnt || echo 'Cannot retrieve namespace information'",
+            "msg": "Container namespace information",
+            "results": []
+        },
+        "Check Control Groups (cgroups) Configuration": {
+            "cmd": "cat /proc/self/cgroup || echo 'No cgroup information found'",
+            "msg": "Control group (cgroup) information",
+            "results": []
+        },
+        "Inspect Container Security Profiles (AppArmor/SELinux)": {
+            "cmd": "docker inspect --format '{{.HostConfig.SecurityOpt}}' $(docker ps -q) || echo 'No security profiles detected'",
+            "msg": "Are there security profiles like AppArmor or SELinux enabled?",
+            "results": []
+        },
+        "Test Docker Escape Techniques (HackTricks)": {
+            "cmd": "docker exec -it $(docker ps -q | head -n1) /bin/sh || echo 'No escape possible'",
+            "msg": "Testing Docker escape techniques",
+            "results": []
+        },
+        "Search for Docker-Related Directories": {
+            "cmd": "find / -name '*docker*' -type d 2>/dev/null || echo 'No Docker directories found'",
+            "msg": "Searching for sensitive Docker directories",
+            "results": []
+        },
+        "Check if Any Containers are Running as Root": {
+            "cmd": "docker ps --filter 'status=running' --filter 'user=root' || echo 'No containers running as root'",
+            "msg": "Are containers running as root?",
+            "results": []
+        },
+        "Check Docker Socket Permissions": {
+            "cmd": "ls -l /var/run/docker.sock | grep docker || echo 'Docker socket not found or not accessible'",
+            "msg": "Checking if Docker socket can be misused",
+            "results": []
+        },
+        "Check Linux Capabilities Added to Containers": {
+            "cmd": "docker inspect --format='{{.HostConfig.CapAdd}}' $(docker ps -q) || echo 'No capabilities added to containers'",
+            "msg": "Checking Linux capabilities added to containers",
+            "results": []
+        },
+        "Gather Container Runtime Information (Docker Version)": {
+            "cmd": "docker version || echo 'Docker not found'",
+            "msg": "Gathering container runtime information",
+            "results": []
+        },
+        "Check if PID 1 is systemd or init (Indicates Container)": {
+            "cmd": "ps -p 1 -o comm= || echo 'Cannot retrieve PID 1 information'",
+            "msg": "Checking if PID 1 is systemd or init (indicates container)",
+            "results": []
+        },
+        "Check Docker Environment Variables for Sensitive Data": {
+            "cmd": "docker inspect --format='{{.Config.Env}}' $(docker ps -q) || echo 'No running containers or no env vars found'",
+            "msg": "Checking if Docker environment variables contain sensitive data",
+            "results": []
+        },
+        "Check for Open Ports in Running Containers": {
+            "cmd": "docker ps --format '{{.Ports}}' || echo 'No running containers with exposed ports'",
+            "msg": "Checking for open ports in running containers",
+            "results": []
+        },
+        "Audit Docker Logs for Security Information": {
+            "cmd": "journalctl -u docker || echo 'No Docker logs found'",
+            "msg": "Auditing Docker logs for security information",
+            "results": []
+        },
+        "Check for Container File Mounts (Sensitive Directories)": {
+            "cmd": "docker inspect --format '{{ .Mounts }}' $(docker ps -q) || echo 'No mounts found'",
+            "msg": "Checking for sensitive file mounts in containers",
+            "results": []
+        }
+    }
+
+    for key, value in container_checks.items():
+        result = run_command(value["cmd"])
+        if result:
+            print_mg(f"\033[0;94m{value['msg']}\033[0m: {result}")
+            value["results"].append(result)
+        else:
+            print_mg(f"\033[0;94m{value['msg']}\033[0m: No result")
+```
+
+---
+
+### Detailed Explanation of Each Step
+
+1. **Container Management Tools Installed**
+   - **Command:** 
+     ```bash
+     which docker lxc rkt podman >/dev/null 2>&1 && echo 'Container tools found' || echo 'No container tools found'
+     ```
+   - **Description:** 
+     This command checks for the presence of common container management tools like Docker, LXC, Rkt, and Podman. If any of these tools are installed, it echoes "Container tools found"; otherwise, it echoes "No container tools found". The presence of these tools indicates the potential use of containerization on the system.
+
+2. **List Mounted Tokens**
+   - **Command:** 
+     ```bash
+     grep -E '(TOKEN|PASS|SECRET)' /proc/mounts || echo 'No sensitive tokens found'
+     ```
+   - **Description:** 
+     Searches for sensitive keywords such as TOKEN, PASS, or SECRET within the `/proc/mounts` file, which lists all mounted filesystems. The presence of these keywords could indicate the mounting of sensitive files or directories, potentially exposing credentials or secrets.
+
+3. **List All Docker Containers (Running and Stopped)**
+   - **Command:** 
+     ```bash
+     docker ps -a --no-trunc 2>/dev/null || echo 'Docker not running'
+     ```
+   - **Description:** 
+     Lists all Docker containers, both running and stopped, with full details (`--no-trunc` prevents truncation of container IDs and names). If Docker is not running, it echoes "Docker not running". This helps identify existing containers that might be misconfigured or vulnerable.
+
+4. **Inspect Running Docker Containers for Detailed Information**
+   - **Command:** 
+     ```bash
+     for container in $(docker ps -q); do docker inspect $container || echo 'Cannot inspect container'; done
+     ```
+   - **Description:** 
+     Iterates through all running Docker containers and runs `docker inspect` on each to gather detailed information about their configurations, such as network settings, mounted volumes, environment variables, and security options. If a container cannot be inspected, it echoes "Cannot inspect container".
+
+5. **Check for Container Breakout Potential (CVE-2019-5736)**
+   - **Command:** 
+     ```bash
+     docker exec -it $(docker ps -q | head -n1) sh 2>/dev/null && echo 'Breakout possible' || echo 'No breakout possible'
+     ```
+   - **Description:** 
+     Attempts to execute a shell inside the first running Docker container. If successful, it echoes "Breakout possible", indicating a potential vulnerability (e.g., CVE-2019-5736) that allows escaping the container to gain host privileges. If the command fails, it echoes "No breakout possible".
+
+6. **Determine if Running Inside a Container (Am I contained?)**
+   - **Command:** 
+     ```bash
+     grep -E 'docker|lxc|kubepods' /proc/1/cgroup && echo 'Running inside a container' || echo 'Not running in a container'
+     ```
+   - **Description:** 
+     Checks the `/proc/1/cgroup` file for indicators of containerization, such as references to Docker, LXC, or Kubernetes pods (`kubepods`). If any of these are found, it echoes "Running inside a container"; otherwise, it echoes "Not running in a container". This helps determine the execution environment's nature.
+
+7. **Gather Information About Container Namespaces**
+   - **Command:** 
+     ```bash
+     lsns -t net,ipc,uts,pid,user,mnt || echo 'Cannot retrieve namespace information'
+     ```
+   - **Description:** 
+     Lists all active namespaces of types network (`net`), inter-process communication (`ipc`), UTS (`uts`), process IDs (`pid`), user IDs (`user`), and mount points (`mnt`). Namespaces are fundamental to container isolation. If the command fails, it echoes "Cannot retrieve namespace information".
+
+8. **Check Control Groups (cgroups) Configuration**
+   - **Command:** 
+     ```bash
+     cat /proc/self/cgroup || echo 'No cgroup information found'
+     ```
+   - **Description:** 
+     Displays the current process's cgroup configuration by reading `/proc/self/cgroup`. Cgroups limit and monitor resource usage, and their configuration can reveal containerization aspects. If the command fails, it echoes "No cgroup information found".
+
+9. **Inspect Container Security Profiles (AppArmor/SELinux)**
+   - **Command:** 
+     ```bash
+     docker inspect --format '{{.HostConfig.SecurityOpt}}' $(docker ps -q) || echo 'No security profiles detected'
+     ```
+   - **Description:** 
+     Inspects running Docker containers to retrieve security options like AppArmor or SELinux profiles applied to them. Proper security profiles enhance container isolation and security. If no profiles are detected or Docker is not available, it echoes "No security profiles detected".
+
+10. **Test Docker Escape Techniques (HackTricks)**
+    - **Command:** 
+      ```bash
+      docker exec -it $(docker ps -q | head -n1) /bin/sh || echo 'No escape possible'
+      ```
+    - **Description:** 
+      Attempts to execute a shell inside the first running Docker container. Successful execution may indicate that escape techniques (like CVE-2019-5736) are possible, potentially allowing an attacker to break out of the container and gain host access. If the attempt fails, it echoes "No escape possible".
+
+11. **Search for Docker-Related Directories**
+    - **Command:** 
+      ```bash
+      find / -name '*docker*' -type d 2>/dev/null || echo 'No Docker directories found'
+      ```
+    - **Description:** 
+      Searches the entire filesystem for directories with names containing "docker". The presence of such directories can reveal Docker configurations, image storage paths, or sensitive data that might be exploitable. If no directories are found, it echoes "No Docker directories found".
+
+12. **Check if Any Containers are Running as Root**
+    - **Command:** 
+      ```bash
+      docker ps --filter 'status=running' --filter 'user=root' || echo 'No containers running as root'
+      ```
+    - **Description:** 
+      Lists running Docker containers that are executing as the root user. Containers running as root can pose significant security risks, as compromising them may grant root access to the host system. If no such containers are found, it echoes "No containers running as root".
+
+13. **Check Docker Socket Permissions**
+    - **Command:** 
+      ```bash
+      ls -l /var/run/docker.sock | grep docker || echo 'Docker socket not found or not accessible'
+      ```
+    - **Description:** 
+      Checks the permissions of the Docker socket (`/var/run/docker.sock`). If the socket is accessible to non-root users, it can be exploited to gain root privileges via Docker commands. If the socket is not found or inaccessible, it echoes "Docker socket not found or not accessible".
+
+14. **Check Linux Capabilities Added to Containers**
+    - **Command:** 
+      ```bash
+      docker inspect --format='{{.HostConfig.CapAdd}}' $(docker ps -q) || echo 'No capabilities added to containers'
+      ```
+    - **Description:** 
+      Inspects running Docker containers to identify any additional Linux capabilities (`CapAdd`) granted to them. Elevated capabilities can increase the attack surface, potentially allowing privilege escalation or system manipulation. If no capabilities are added, it echoes "No capabilities added to containers".
+
+15. **Gather Container Runtime Information (Docker Version)**
+    - **Command:** 
+      ```bash
+      docker version || echo 'Docker not found'
+      ```
+    - **Description:** 
+      Retrieves the installed Docker version. Knowing the Docker version can help identify known vulnerabilities or necessary updates. If Docker is not installed or not found, it echoes "Docker not found".
+
+16. **Check if PID 1 is systemd or init (Indicates Container)**
+    - **Command:** 
+      ```bash
+      ps -p 1 -o comm= || echo 'Cannot retrieve PID 1 information'
+      ```
+    - **Description:** 
+      Checks the command name of the process with PID 1 (the first process in the system). In containers, PID 1 is often a minimal process like `sh`, whereas on host systems, it is typically `systemd` or `init`. This helps determine if the script is running inside a container. If PID 1 cannot be retrieved, it echoes "Cannot retrieve PID 1 information".
+
+17. **Check Docker Environment Variables for Sensitive Data**
+    - **Command:** 
+      ```bash
+      docker inspect --format='{{.Config.Env}}' $(docker ps -q) || echo 'No running containers or no env vars found'
+      ```
+    - **Description:** 
+      Inspects running Docker containers to list environment variables (`Config.Env`). Environment variables can contain sensitive data like credentials or API keys. If no environment variables are found or Docker is not running, it echoes "No running containers or no env vars found".
+
+18. **Check for Open Ports in Running Containers**
+    - **Command:** 
+      ```bash
+      docker ps --format '{{.Ports}}' || echo 'No running containers with exposed ports'
+      ```
+    - **Description:** 
+      Lists open ports in running Docker containers. Open or exposed ports can be potential entry points for attackers, especially if services running on these ports are vulnerable. If no containers have exposed ports, it echoes "No running containers with exposed ports".
+
+19. **Audit Docker Logs for Security Information**
+    - **Command:** 
+      ```bash
+      journalctl -u docker || echo 'No Docker logs found'
+      ```
+    - **Description:** 
+      Retrieves logs related to the Docker service using `journalctl`. Analyzing Docker logs can reveal misconfigurations, security breaches, or suspicious activities that might be leveraged for further exploitation. If no logs are found, it echoes "No Docker logs found".
+
+20. **Check for Container File Mounts (Sensitive Directories)**
+    - **Command:** 
+      ```bash
+      docker inspect --format '{{ .Mounts }}' $(docker ps -q) || echo 'No mounts found'
+      ```
+    - **Description:** 
+      Inspects running Docker containers to identify mounted directories or files (`Mounts`). Mounting sensitive host directories inside containers can expose critical system files, leading to potential privilege escalation or data breaches. If no mounts are found, it echoes "No mounts found".
+
+---
+
+### Integration into Your Script
+
+To incorporate the `container_info` function into your existing script structure (which includes `user_info`, `history_info`, `network_info`, and `system_info`), ensure that the function is called appropriately within your main execution flow. Here's how you can integrate it:
+
+### Detailed Step-by-Step Explanation
+
+1. **Function Definition:**
+   - **`def container_info():`**
+     - Defines a new function named `container_info` responsible for performing container-related security checks.
+
+2. **Header Printing:**
+   - **`print_mg("Container and Docker Information", header=True)`**
+     - Prints a formatted header to indicate the start of the container information section.
+
+3. **Container Checks Dictionary:**
+   - **`container_checks = { ... }`**
+     - A dictionary containing multiple container-related security checks.
+     - Each key represents a specific check, and its value is another dictionary containing:
+       - **`"cmd"`**: The shell command to execute.
+       - **`"msg"`**: A descriptive message about what the check is performing.
+       - **`"results"`**: An empty list intended to store the results of the command execution.
+
+4. **Iterating Through Checks:**
+   - **`for key, value in container_checks.items():`**
+     - Iterates over each check defined in the `container_checks` dictionary.
+   
+5. **Executing Commands:**
+   - **`result = run_command(value["cmd"])`**
+     - Executes the shell command associated with the current check using the previously defined `run_command` function.
+     - The `run_command` function handles command execution, captures output, and manages errors or timeouts.
+
+6. **Processing Results:**
+   - **`if result:`**
+     - Checks if the command produced any output.
+     - If there is output, it proceeds to print and store the result.
+   
+7. **Printing Results:**
+   - **`print_mg(f"\033[0;94m{value['msg']}\033[0m: {result}")`**
+     - Prints the descriptive message (`msg`) in a colored format (light blue) followed by the command's result.
+   
+8. **Storing Results:**
+   - **`value["results"].append(result)`**
+     - Appends the command's output to the `results` list within the respective check's dictionary entry.
+   
+9. **Handling No Result:**
+   - **`else:`**
+     - If the command does not produce any output (i.e., `result` is `None` or empty), it prints a message indicating "No result".
+     - **`print_mg(f"\033[0;94m{value['msg']}\033[0m: No result")`**
+
+10. **Function Call Integration:**
+    - Ensure that the `container_info` function is called within your main script's execution flow, as shown in the `main` function example above.
+
+---
+
+### Additional Recommendations
+
+1. **Permissions and Privileges:**
+   - **Docker Commands:** 
+     - Running Docker commands typically requires root privileges or membership in the `docker` group. Ensure your script is executed with appropriate permissions to avoid permission-related errors.
+   
+2. **Error Handling Enhancements:**
+   - **Robustness:**
+     - Consider enhancing the `run_command` function to handle more nuanced error cases or to parse specific error messages for better diagnostics.
+   
+3. **Output Formatting:**
+   - **Consistency:**
+     - Maintain consistent formatting across all output messages for better readability.
+     - Utilize ANSI color codes effectively to highlight critical information.
+   
+4. **Performance Optimization:**
+   - **Parallel Execution:**
+     - For large-scale scripts, consider parallelizing certain checks to reduce execution time, especially when dealing with multiple containers.
+   
+5. **Logging and Reporting:**
+   - **Comprehensive Reports:**
+     - Expand the `save_report` function to include container-related findings, providing a holistic security report.
+     - Structure the report in HTML or another readable format for easy analysis.
+
+6. **Regular Updates:**
+   - **Stay Current:**
+     - Container security is an evolving field. Regularly update your script to incorporate new checks or to adjust existing ones based on emerging vulnerabilities and best practices.
+
+---
+
+### Conclusion
+
+The `container_info` function provided above is a robust addition to your privilege escalation script, meticulously incorporating comprehensive container security checks inspired by linPEAS and other authoritative sources. Each check is designed to uncover potential vulnerabilities, misconfigurations, or security oversights within containerized environments, particularly Docker.
+
+By integrating this function, your script will be well-equipped to perform in-depth container enumeration and security assessments, ensuring that no critical aspect is overlooked. This will significantly enhance the effectiveness of your privilege escalation efforts, providing a thorough understanding of the containerized landscape within the target system.
+
+Feel free to reach out if you need further refinements or additional functionalities!
+
+print_2title "Container details"
+print_list "Is this a container? ...........$NC $containerType"
+
+print_list "Any running containers? ........ "$NC
+
+# Get counts of running containers for each platform
+dockercontainers=$(docker ps --format "{{.Names}}" 2>/dev/null | wc -l)
+podmancontainers=$(podman ps --format "{{.Names}}" 2>/dev/null | wc -l)
+lxccontainers=$(lxc list -c n --format csv 2>/dev/null | wc -l)
+rktcontainers=$(rkt list 2>/dev/null | tail -n +2 | wc -l)
+
+# Check if any containers are running
+if [ "$dockercontainers" -eq "0" ] && [ "$lxccontainers" -eq "0" ] && [ "$rktcontainers" -eq "0" ] && [ "$podmancontainers" -eq "0" ]; then
+    echo_no
+else
+    containerCounts=""
+    if [ "$dockercontainers" -ne "0" ]; then containerCounts="${containerCounts}docker($dockercontainers) "; fi
+    if [ "$podmancontainers" -ne "0" ]; then containerCounts="${containerCounts}podman($podmancontainers) "; fi
+    if [ "$lxccontainers" -ne "0" ]; then containerCounts="${containerCounts}lxc($lxccontainers) "; fi
+    if [ "$rktcontainers" -ne "0" ]; then containerCounts="${containerCounts}rkt($rktcontainers) "; fi
+    echo "Yes $containerCounts" | sed -${E} "s,.*,${SED_RED},"
+    
+    # List any running containers
+    if [ "$dockercontainers" -ne "0" ]; then 
+        echo "Running Docker Containers" | sed -${E} "s,.*,${SED_RED},"
+        docker ps | tail -n +2 2>/dev/null
+        echo ""
+    fi
+    if [ "$podmancontainers" -ne "0" ]; then 
+        echo "Running Podman Containers" | sed -${E} "s,.*,${SED_RED},"
+        podman ps | tail -n +2 2>/dev/null
+        echo ""
+    fi
+    if [ "$lxccontainers" -ne "0" ]; then 
+        echo "Running LXC Containers" | sed -${E} "s,.*,${SED_RED},"
+        lxc list 2>/dev/null
+        echo ""
+    fi
+    if [ "$rktcontainers" -ne "0" ]; then 
+        echo "Running RKT Containers" | sed -${E} "s,.*,${SED_RED},"
+        rkt list 2>/dev/null
+        echo ""
+    fi
+fi
