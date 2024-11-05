@@ -28,7 +28,8 @@ options:
   -c, --container   Check container information
   --all             Check all information
 
-## References
+# References
+
 - [Steflan Security Linux Privilege Escalation Guide](https://steflan-security.com/category/guides/privilegeescalation/linux/)
 - [HackTricks Linux Hardening](https://book.hacktricks.xyz/linux-hardening/privilege-escalation)
 - [linPEAS](https://github.com/peass-ng/PEASS-ng)
